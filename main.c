@@ -1,8 +1,6 @@
 #include <stdio.h>
-#include <strings.h>
 #include <string.h>
 #include "node.h"
-//#pragma once
 
 node *binary_tree;
 // binary_tree - ссылка на корневую вершину
@@ -12,74 +10,107 @@ bool PROG = true;
 // PROGRAMM - переменная, отвечающая за жизненный процесс программы
 int STATE = 0;
 /*
- * STATE - переменная, отвечающая за состояние программы
- * STATE = 0 - menu
- * STATE = 1 - extrafunctions
- * STATE = 2 - quit
- */
-
-/* сontinue_phase():
- *
- *  Функция считывает значение, чтобы приостановить программу перед переходом между обновлениями меню
- *
+* STATE - переменная, отвечающая за состояние программы
+* STATE = 0 - menu
+* STATE = 1 - extrafunctions
+* STATE = 2 - quit
 */
+
+int get_command(bool *st) {
+    bool num = true;
+    int size = 0;
+    int capacity = 1;
+    char *str = malloc(sizeof(char));
+    char k;
+    while(k = getchar()) {
+        if(k == '\n')
+            break;
+        if(k < '0' || k > '9')
+            num = false;
+        str[size] = k;
+        size++;
+        if(size == capacity) {
+            char *new_str = malloc(sizeof(char) * 2 * capacity);
+            for(int i = 0;i < capacity;i++)
+                new_str[i] = str[i];
+            free(str);
+            str = new_str;
+            capacity *= 2;
+        }
+    }
+
+    for(int i = 0;i < size;i++)
+        printf("%c",str[i]);
+    printf("\n");
+
+    if(num && size < 9) {
+        int ans = 0;
+        for(int i = 0;i < size;i++)
+            ans = (str[i] - '0') + ans * 10;
+        free(str);
+        *st = true;
+        printf("%d\n",ans);
+        return ans;
+    }
+    else {
+        *st = false;
+        free(str);
+        return 0;
+    }
+}
+
 void continue_phase() {
-    int in;
     printf("Введите 1, чтобы продолжить: ");
-    scanf("%d",&in);
+    bool st;
+    int in = get_command(&st);
     while(in != 1) {
-    printf("Введено неправильное значение!\nПовторите попытку!\n");
-    scanf("%d",&in);
+        printf("Введено неправильное значение!\nПовторите попытку!\n");
+        in = get_command(&st);
     }
     system("clear");
 }
 
-/*  insert_node():
- *
- *      Функция вставки вершины в двоичное дерево
- *
- */
-
 void insert_node() {
-    int vert;
+    bool st;
     printf("Введите новую вершину: ");
-    scanf("%d", &vert);
-
-    if(!created) {
-        binary_tree = create_node(vert);
-        if(binary_tree == NULL)
-            printf("Вершина не создана!\n");
-        else {
-            created = true;
-            printf("Создана вершина со значением %d\n", binary_tree->key);
-        }
-    }
+    int new_node = get_command(&st);
+    if(!st)
+        printf("Введено неправильное значение!\n");
     else {
-        node *n = create_node(vert);
-        if(n == NULL)
-            printf("Вершина не создана!\n");
-        else {
-            insert(binary_tree, n);
-            printf("Создана вершина со значением %d\n", n->key);
+        if (!created) {
+            binary_tree = create_node(new_node);
+            if (binary_tree == NULL)
+                printf("Вершина не создана!\n");
+            else {
+                created = true;
+                printf("Создана вершина со значением %d\n", binary_tree->key);
+            }
+        } else {
+            node *n = create_node(new_node);
+            if (n == NULL)
+                printf("Вершина не создана!\n");
+            else {
+                insert(binary_tree, n);
+                printf("Создана вершина со значением %d\n", n->key);
+            }
         }
     }
     continue_phase();
 }
 
-/*  delete_node():
- *
- *      Функция удаления вершины из двоичного дерева
- *
- */
-
 void delete_node() {
     int val;
+    bool st;
     printf("Введите значение, которое хотите удалить: ");
-    scanf("%d",&val);
-    binary_tree = delete(binary_tree,val);
-    if(binary_tree == NULL) {
-        printf("Дерево было удалено\n");
-        created = false;
+    val = get_command(&st);
+    if(!st)
+        printf("Введено неправильное значение!\n");
+    else {
+        binary_tree = delete(binary_tree, val);
+        if (binary_tree == NULL) {
+            printf("Дерево было удалено\n");
+            created = false;
+        }
     }
     continue_phase();
 }
@@ -101,15 +132,10 @@ void delete_node() {
 void tree_output() {
     if(!created)
         printf("Дерево еще не создано!\n");
-    else print_nodes(binary_tree, 0);
+    else
+        print_nodes(binary_tree, 0);
     continue_phase();
 }
-
-/*  destroy_tree():
- *
- *      Функция удаления дерева и очищения памяти
- *
- */
 
 void destroy_tree() {
     if(!created)
@@ -119,14 +145,9 @@ void destroy_tree() {
         created = false;
         printf("Дерево было уничтожено.\n");
     }
-    if(PROG) continue_phase();
+    if(PROG)
+        continue_phase();
 }
-
-/*  is_BTree():
- *
- *      Функция проверяет, является ли бинарное дерево B-деревом
- *
- */
 
 void is_BTree() {
     if(!created)
@@ -138,55 +159,40 @@ void is_BTree() {
     continue_phase();
 }
 
-/*  tree_width();
- *
- *
- *
- */
-
 void tree_width() {
     if(!created)
         printf("Ширина дерева: 0\n");
-    else printf("Ширина дерева: %d\n", max_depth(binary_tree));
+    else
+        printf("Ширина дерева: %d\n", max_depth(binary_tree));
     continue_phase();
 }
-
-/*  num_of_vertix()
- *
- *      Функция выводит количество вершин в дереве
- *
- */
 
 void num_of_vertix() {
     if(!created)
         printf("Количество вершин: 0\n");
-    else printf("Количество вершин: %d\n", vertex_number(binary_tree));
+    else
+        printf("Количество вершин: %d\n", vertex_number(binary_tree));
     continue_phase();
 }
-
-/*  num_of_nonterminal():
- *
- *      Функция выводи количество нетерминантных вершин(т.е листьев)
- *
- */
 
 void num_of_nonterminal() {
     if(!created)
         printf("Количество нетерминантных вершин: 0\n");
-    else printf("Количество нетерминантных вершин: %d\n", non_terminal_number(binary_tree));
+    else
+        printf("Количество нетерминантных вершин: %d\n", non_terminal_number(binary_tree));
     continue_phase();
 }
 
 void val_of_the_deepest_leaf() {
     if(!created)
         printf("Значение самого глубокого листа: 0\n");
-    else printf("Значение самого глубокого листа: %d\n", deepest_leaf_value(binary_tree));
+    else
+        printf("Значение самого глубокого листа: %d\n", deepest_leaf_value(binary_tree));
     continue_phase();
 }
 
 bool extra_functions() {
     system("clear");
-    int ans;
     printf("Выберите функцию:\n"
            "(1)Проверка на B-дерево\n"
            "(2)Ширина двоичного дерева\n"
@@ -194,10 +200,10 @@ bool extra_functions() {
            "(4)Количество нетерминальных вершин\n"
            "(5)Значение самого глубокого листа\n"
            "(6)Назад в меню\n"
-           "(0)Выход из приложения\n"
+           "(7)Выход из приложения\n"
            "Введите команду: ");
-    scanf("%d",&ans);
-
+    bool st;
+    int ans = get_command(&st);
     switch (ans) {
         case 1:
             is_BTree();
@@ -218,7 +224,7 @@ bool extra_functions() {
             STATE = 0;
             system("clear");
             break;
-        case 0:
+        case 7:
             STATE = 2;
             system("clear");
             break;
@@ -230,17 +236,17 @@ bool extra_functions() {
 }
 
 bool menu() {
-    int ans;
     printf( "Menu:\n"
             "(1)Добавление вершины\n"
             "(2)Удаление вершины\n"
             "(3)Вывод дерева\n"
             "(4)Дополнительные функции\n"
             "(5)Удаление дерева\n"
-            "(0)Выход из приложения\n"
+            "(6)Выход из приложения\n"
             "Введите команду: ");
 
-    scanf("%d",&ans);
+    bool st;
+    int ans = get_command(&st);
     switch (ans) {
         case 1:
             insert_node();
@@ -258,7 +264,7 @@ bool menu() {
         case 5:
             destroy_tree();
             break;
-        case 0:
+        case 6:
             system("clear");
             STATE = 2;
             break;
@@ -270,12 +276,13 @@ bool menu() {
 }
 
 bool quit() {
-    int ans;
     printf("Вы точно хотите выйти?\n"
-           "[Да(1)/Нет(0)]\n");
-    scanf("%d",&ans);
-    if(ans != 1) {
-        if(ans) printf("Введено неправильное значение\n");
+           "[Да(1)/Нет(2)]\n");
+    bool st;
+    int ans = get_command(&st);
+    if(ans != 1 || !st) {
+        if(ans != 2)
+            printf("Введено неправильное значение\n");
         STATE = 0;
         continue_phase();
         return false;
@@ -286,11 +293,14 @@ bool quit() {
 int main() {
     system("clear");
     while (PROG) {
-        if (STATE == 0) menu();
-        else if (STATE == 1) extra_functions();
-        else PROG = !quit();
+        if(STATE == 0)
+            menu();
+        else if(STATE == 1)
+            extra_functions();
+        else
+            PROG = !quit();
     }
-    destroy_tree(binary_tree);
+    destroy_tree();
     printf("Завершение программы.\n");
     return 0;
 }
